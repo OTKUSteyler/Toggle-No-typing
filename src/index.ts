@@ -1,6 +1,7 @@
 import { registerCommand } from "@vendetta/commands";
 import { storage } from "@vendetta/plugin";
-import { FluxDispatcher } from "@vendetta/metro/common";
+import { findByProps } from "@vendetta/metro";
+import { after } from "@vendetta/patcher";
 
 const settings = storage.createProxy({ disabled: false });
 
@@ -9,14 +10,18 @@ let unpatch;
 
 export default {
     onLoad: () => {
-        // Intercept typing events
-        unpatch = FluxDispatcher.addInterceptor((payload) => {
-            // Block TYPING_START events when disabled
-            if (settings.disabled && payload.type === "TYPING_START") {
-                return false;
-            }
-            return true;
-        });
+        // Find and patch the typing module
+        const TypingModule = findByProps("startTyping");
+        
+        if (TypingModule) {
+            unpatch = after("startTyping", TypingModule, (args, ret) => {
+                // Block typing if disabled
+                if (settings.disabled) {
+                    return;
+                }
+                return ret;
+            });
+        }
 
         // Register /typing command
         unregisterCommand = registerCommand({
