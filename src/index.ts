@@ -2,26 +2,22 @@ import { registerCommand } from "@vendetta/commands";
 import { findByProps } from "@vendetta/metro";
 import { storage } from "@vendetta/plugin";
 
-const TypingModule = findByProps("startTyping");
 const settings = storage.createProxy({ disabled: false });
 
-function toggleTyping() {
-    settings.disabled = !settings.disabled;
-    
-    return `🔄 Typing indicators are now **${settings.disabled ? 'DISABLED ❌' : 'ENABLED ✅'}**`;
-}
-
 let unregisterCommand;
+let TypingModule;
 let originalStartTyping;
 
 export default {
     onLoad: () => {
-        // Save original function and replace it
+        // Find the typing module
+        TypingModule = findByProps("startTyping");
+        
+        // Only patch if module exists
         if (TypingModule && TypingModule.startTyping) {
             originalStartTyping = TypingModule.startTyping;
             
             TypingModule.startTyping = function(...args) {
-                // If disabled, don't call the original function
                 if (settings.disabled) {
                     return;
                 }
@@ -29,16 +25,17 @@ export default {
             };
         }
         
+        // Register command
         unregisterCommand = registerCommand({
             name: "typing",
             displayName: "Typing Toggle",
             description: "Toggle typing indicators on/off",
             options: [],
             execute: async (args, ctx) => {
-                const content = toggleTyping();
+                settings.disabled = !settings.disabled;
                 
                 return {
-                    content: content
+                    content: `🔄 Typing indicators are now **${settings.disabled ? 'DISABLED ❌' : 'ENABLED ✅'}**`
                 };
             },
             applicationId: "-1",
@@ -48,7 +45,6 @@ export default {
     },
     
     onUnload: () => {
-        // Restore original function
         if (TypingModule && originalStartTyping) {
             TypingModule.startTyping = originalStartTyping;
         }
