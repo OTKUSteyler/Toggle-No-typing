@@ -4,7 +4,8 @@ import { storage } from "@vendetta/plugin";
 
 const settings = storage.createProxy({ disabled: false });
 
-let unregisterCommand;
+let unregisterCommandOn;
+let unregisterCommandOff;
 let TypingModule;
 let originalStartTyping;
 
@@ -25,17 +26,35 @@ export default {
             };
         }
         
-        // Register command
-        unregisterCommand = registerCommand({
-            name: "typing",
-            displayName: "Typing Toggle",
-            description: "Toggle typing indicators on/off",
+        // Register /typingoff command
+        unregisterCommandOff = registerCommand({
+            name: "typingoff",
+            displayName: "Typing Off",
+            description: "Disable typing indicators",
             options: [],
             execute: async (args, ctx) => {
-                settings.disabled = !settings.disabled;
+                settings.disabled = true;
                 
                 return {
-                    content: `🔄 Typing indicators are now **${settings.disabled ? 'DISABLED ❌' : 'ENABLED ✅'}**`
+                    content: `❌ Typing indicators are now **DISABLED**`
+                };
+            },
+            applicationId: "-1",
+            inputType: 1,
+            type: 1,
+        });
+        
+        // Register /typingon command
+        unregisterCommandOn = registerCommand({
+            name: "typingon",
+            displayName: "Typing On",
+            description: "Enable typing indicators",
+            options: [],
+            execute: async (args, ctx) => {
+                settings.disabled = false;
+                
+                return {
+                    content: `✅ Typing indicators are now **ENABLED**`
                 };
             },
             applicationId: "-1",
@@ -49,8 +68,12 @@ export default {
             TypingModule.startTyping = originalStartTyping;
         }
         
-        if (unregisterCommand) {
-            unregisterCommand();
+        if (unregisterCommandOff) {
+            unregisterCommandOff();
+        }
+        
+        if (unregisterCommandOn) {
+            unregisterCommandOn();
         }
     }
 };
