@@ -1,18 +1,34 @@
 import { registerCommand } from "@vendetta/commands";
+import { findByProps } from "@vendetta/metro";
+import { before } from "@vendetta/patcher";
 
 let unregisterCommandOn;
 let unregisterCommandOff;
+let unpatch;
+let typingDisabled = false;
 
 export default {
     onLoad: () => {
+        // Find and patch the typing module
+        const TypingModule = findByProps("startTyping", "stopTyping");
+        
+        if (TypingModule?.startTyping) {
+            unpatch = before("startTyping", TypingModule, (args) => {
+                if (typingDisabled) {
+                    return [];
+                }
+            });
+        }
+        
         unregisterCommandOff = registerCommand({
             name: "typingoff",
             displayName: "Typing Off",
             description: "Disable typing indicators",
             options: [],
             execute: async (args, ctx) => {
+                typingDisabled = true;
                 return {
-                    content: "❌ Typing indicators disabled (plugin loaded)"
+                    content: "❌ Typing indicators are now **DISABLED**"
                 };
             },
             applicationId: "-1",
@@ -26,8 +42,9 @@ export default {
             description: "Enable typing indicators",
             options: [],
             execute: async (args, ctx) => {
+                typingDisabled = false;
                 return {
-                    content: "✅ Typing indicators enabled (plugin loaded)"
+                    content: "✅ Typing indicators are now **ENABLED**"
                 };
             },
             applicationId: "-1",
@@ -37,6 +54,7 @@ export default {
     },
     
     onUnload: () => {
+        unpatch?.();
         unregisterCommandOff?.();
         unregisterCommandOn?.();
     }
