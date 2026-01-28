@@ -1,11 +1,10 @@
 {
-    "name": "Template Plugin",
-    "description": "A plugin for use as a template.",
+    "name": "NoTyping Toggle",
+    "description": "adds a / toggle for NoTyping Toggle .",
     "authors": [
         {
-            "name": "You!",
-            "id": "YOUR_ID_HERE"
-        }
+            "name": " btmc727",
+            "id": "554071670143451176",
     ],
     "main": "src/index.ts",
     "vendetta": {
