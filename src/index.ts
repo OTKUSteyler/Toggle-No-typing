@@ -1,39 +1,44 @@
 import { registerCommand } from "@vendetta/commands";
-import { storage } from "@vendetta/plugin";
 import { findByProps } from "@vendetta/metro";
-import { after } from "@vendetta/patcher";
+import { storage } from "@vendetta/plugin";
 
+const TypingModule = findByProps("startTyping");
 const settings = storage.createProxy({ disabled: false });
 
+function toggleTyping() {
+    settings.disabled = !settings.disabled;
+    
+    return `🔄 Typing indicators are now **${settings.disabled ? 'DISABLED ❌' : 'ENABLED ✅'}**`;
+}
+
 let unregisterCommand;
-let unpatch;
+let originalStartTyping;
 
 export default {
     onLoad: () => {
-        // Find and patch the typing module
-        const TypingModule = findByProps("startTyping");
-        
-        if (TypingModule) {
-            unpatch = after("startTyping", TypingModule, (args, ret) => {
-                // Block typing if disabled
+        // Save original function and replace it
+        if (TypingModule && TypingModule.startTyping) {
+            originalStartTyping = TypingModule.startTyping;
+            
+            TypingModule.startTyping = function(...args) {
+                // If disabled, don't call the original function
                 if (settings.disabled) {
                     return;
                 }
-                return ret;
-            });
+                return originalStartTyping.apply(this, args);
+            };
         }
-
-        // Register /typing command
+        
         unregisterCommand = registerCommand({
             name: "typing",
             displayName: "Typing Toggle",
             description: "Toggle typing indicators on/off",
             options: [],
             execute: async (args, ctx) => {
-                settings.disabled = !settings.disabled;
+                const content = toggleTyping();
                 
                 return {
-                    content: `🔄 Typing indicators are now **${settings.disabled ? 'DISABLED ❌' : 'ENABLED ✅'}**`
+                    content: content
                 };
             },
             applicationId: "-1",
@@ -43,11 +48,13 @@ export default {
     },
     
     onUnload: () => {
+        // Restore original function
+        if (TypingModule && originalStartTyping) {
+            TypingModule.startTyping = originalStartTyping;
+        }
+        
         if (unregisterCommand) {
             unregisterCommand();
-        }
-        if (unpatch) {
-            unpatch();
         }
     }
 };
