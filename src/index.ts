@@ -27,9 +27,6 @@ export default {
             options: [],
             execute: async (args, ctx) => {
                 typingDisabled = true;
-                return {
-                    content: "❌ Typing indicators are now **DISABLED**"
-                };
             },
             applicationId: "-1",
             inputType: 1,
@@ -43,9 +40,6 @@ export default {
             options: [],
             execute: async (args, ctx) => {
                 typingDisabled = false;
-                return {
-                    content: "✅ Typing indicators are now **ENABLED**"
-                };
             },
             applicationId: "-1",
             inputType: 1,
